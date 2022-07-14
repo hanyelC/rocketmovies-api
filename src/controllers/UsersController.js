@@ -2,26 +2,17 @@ const bcrypt = require('bcryptjs')
 const sqliteConnection = require("../database/sqlite")
 const AppError = require("../utils/AppError")
 
+const { UserRepository } = require("../repositories/UserRepository")
+const { UserCreateService } = require("../services/UserCreateService")
+
 class UsersController {
   async create(req, res) {
-    const { name, email, password, avatar } = req.body
-    
-    if(!email.match(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/))
-      throw new AppError("Formato de email inválido")  
+    const { name, email, password } = req.body
 
-    const db = await sqliteConnection()
-    
-    const checkIfUserExists = await db.get("SELECT * FROM users WHERE email = (?)", [email])
+    const userRepository = new UserRepository()
+    const userCreateService = new UserCreateService(userRepository)
 
-    if (checkIfUserExists) {
-      await db.close()
-      throw new AppError("Email já cadastrado")
-    }
-
-    const hashedPassword = bcrypt.hashSync(password, 8)
-
-    await db.run("INSERT INTO users (name, email, password, avatar) VALUES (?,?,?,?)", [name, email, hashedPassword, avatar])
-    await db.close()
+    await userCreateService.execute({ name, email, password })
 
     return res.status(201).json()
   }
@@ -52,7 +43,7 @@ class UsersController {
     }
 
     let checkPasswordMatch
-    if(password) checkPasswordMatch = bcrypt.compareSync(old_password, user.password)
+    if (password) checkPasswordMatch = bcrypt.compareSync(old_password, user.password)
 
     if (password && !checkPasswordMatch) {
       await db.close()

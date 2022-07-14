@@ -36,4 +36,4 @@ app.use((err, req, res, next) => {
   })
 })
 
-app.listen(process.env.PORT || 3030, console.log('server running on port 3030'))
+app.listen(process.env.PORT || 3030, console.log('server running on port ', process.env.PORT || 3030))

@@ -4,3 +4,4 @@ nodemon.json
 .vscode
 uploads/**
 .env
+coverage
