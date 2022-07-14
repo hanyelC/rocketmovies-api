@@ -7,6 +7,18 @@ class UserCreateService {
   }
 
   async execute({ name, email, password }) {
+    if (!name) {
+      throw new AppError("Nome é obrigatório.")
+    }
+
+    if (!email) {
+      throw new AppError("Email é obrigatório.")
+    }
+
+    if (!password) {
+      throw new AppError("Senha é obrigatória.")
+    }
+
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
       throw new AppError("Formato de email inválido.")
     }
