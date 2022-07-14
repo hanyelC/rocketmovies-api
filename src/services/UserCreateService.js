@@ -7,19 +7,33 @@ class UserCreateService {
   }
 
   async execute({ name, email, password }) {
+    if (!name) {
+      throw new AppError("Nome é obrigatório.")
+    }
+
+    if (!email) {
+      throw new AppError("Email é obrigatório.")
+    }
+
+    if (!password) {
+      throw new AppError("Senha é obrigatória.")
+    }
+
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-      throw new AppError("Formato de email inválido")
+      throw new AppError("Formato de email inválido.")
     }
 
     const checkIfUserExists = await this.userRepository.findByEmail(email)
 
     if (checkIfUserExists) {
-      throw new AppError("Email já cadastrado")
+      throw new AppError("Email já cadastrado.")
     }
 
     const hashedPassword = hashSync(password, 8)
 
-    await this.userRepository.create({ name, email, password: hashedPassword })
+    const userCreated = await this.userRepository.create({ name, email, password: hashedPassword })
+
+    return userCreated
   }
 }
 
