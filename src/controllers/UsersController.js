@@ -18,27 +18,24 @@ class UsersController {
   }
 
   async update(req, res) {
-    const db = await sqliteConnection()
-
     const { name, email, password, old_password } = req.body
     const { user_id } = req.body
 
-    const user = await db.get("SELECT * FROM users WHERE id = (?)", [user_id])
+    const userRepository = new UserRepository()
+
+    const user = await userRepository.findById(user_id)
 
     if (!user) {
-      await db.close()
       throw new AppError("Usuário não encontrado")
     }
 
-    const userWithNewEmail = await db.get("SELECT * FROM users WHERE email = (?)", [email])
+    const userWithNewEmail = await userRepository.findByEmail(email)
 
     if (userWithNewEmail && userWithNewEmail.id !== user_id) {
-      await db.close()
       throw new AppError("Email já está em uso")
     }
 
     if (password && !old_password) {
-      await db.close()
       throw new AppError("Você precisa informar a senha antiga para alterar a sua senha")
     }
 
@@ -46,7 +43,6 @@ class UsersController {
     if (password) checkPasswordMatch = bcrypt.compareSync(old_password, user.password)
 
     if (password && !checkPasswordMatch) {
-      await db.close()
       throw new AppError("A senha antiga não confere")
     } else {
       user.password = password ? bcrypt.hashSync(password, 8) : user.password
@@ -55,9 +51,7 @@ class UsersController {
     user.name = name ?? user.name
     user.email = email ?? user.email
 
-    await db.run("UPDATE users SET name = ?, email = ?, password = ?, updated_at = DATETIME('now')  WHERE id = ?", [user.name, user.email, user.password, user_id])
-    await db.close()
-
+    await userRepository.update(user)
 
     return res.status(204).json({})
 
