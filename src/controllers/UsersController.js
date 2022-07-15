@@ -1,9 +1,6 @@
-const bcrypt = require('bcryptjs')
-const sqliteConnection = require("../database/sqlite")
-const AppError = require("../utils/AppError")
-
 const { UserRepository } = require("../repositories/UserRepository")
 const { UserCreateService } = require("../services/UserCreateService")
+const { UserUpdateService } = require("../services/UserUpdateService")
 
 class UsersController {
   async create(req, res) {
@@ -22,36 +19,9 @@ class UsersController {
     const { user_id } = req.body
 
     const userRepository = new UserRepository()
+    const userUpdateService = new UserUpdateService(userRepository)
 
-    const user = await userRepository.findById(user_id)
-
-    if (!user) {
-      throw new AppError("Usuário não encontrado")
-    }
-
-    const userWithNewEmail = await userRepository.findByEmail(email)
-
-    if (userWithNewEmail && userWithNewEmail.id !== user_id) {
-      throw new AppError("Email já está em uso")
-    }
-
-    if (password && !old_password) {
-      throw new AppError("Você precisa informar a senha antiga para alterar a sua senha")
-    }
-
-    let checkPasswordMatch
-    if (password) checkPasswordMatch = bcrypt.compareSync(old_password, user.password)
-
-    if (password && !checkPasswordMatch) {
-      throw new AppError("A senha antiga não confere")
-    } else {
-      user.password = password ? bcrypt.hashSync(password, 8) : user.password
-    }
-
-    user.name = name ?? user.name
-    user.email = email ?? user.email
-
-    await userRepository.update(user)
+    await userUpdateService.execute({ id: user_id, name, email, password, old_password })
 
     return res.status(204).json({})
 
