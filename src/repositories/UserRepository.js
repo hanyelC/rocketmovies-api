@@ -38,7 +38,7 @@ class UserRepository {
 
     await db.close()
 
-    return { id }
+    return { id, name, email, password }
   }
 }
 
