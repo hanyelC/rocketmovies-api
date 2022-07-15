@@ -1,5 +1,7 @@
 class UserRepositoryInMemory {
-  users = []
+  constructor(users = []) {
+    this.user = users
+  }
 
   async findByEmail(email) {
     const user = this.users.find(user => user.email === email)
